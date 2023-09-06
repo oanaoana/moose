@@ -1524,6 +1524,7 @@ Parser::extractParams(const std::string & prefix, InputParameters & p)
         setvectorvector(DistributionName);
         setvectorvector(SamplerName);
         setvectorvector(TagName);
+        setvectorvector(ReporterValueName);
 
         // Triple indexed types
         setvectorvectorvector(Real);
@@ -1562,6 +1563,7 @@ Parser::extractParams(const std::string & prefix, InputParameters & p)
         setvectorvectorvector(MaterialName);
         setvectorvectorvector(DistributionName);
         setvectorvectorvector(SamplerName);
+        setvectorvectorvector(ReporterValueName);
         else
         {
           mooseError("unsupported type '", par->type(), "' for input parameter '", full_name, "'");
