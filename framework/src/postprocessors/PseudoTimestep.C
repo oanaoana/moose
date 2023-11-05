@@ -150,7 +150,7 @@ PseudoTimestep::execute()
 {
   Transient * transient = dynamic_cast<Transient *>(_app.getExecutioner());
 
-  Real res_norm, var_res;
+  Real res_norm;
   Real curr_dt;
   Real update_dt;
 
