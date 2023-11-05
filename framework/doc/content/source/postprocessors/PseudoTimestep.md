@@ -3,18 +3,18 @@
 The methods implemented in this postprocessor compute timesteps adaptively using Pseudo Transient Continuation strategies. This allows for steady state problems solved via time marching approcah to reach the final state rapidly.
 As a reminder the time marching approach to computing steady states reframes a problem in discrete form $M\frac{\partial \mathbf u}{\Delta t}=F(\mathbf u)$ as
 
-\begin{equation}
+$$
 M\frac{\mathbf u_{n+1}-\mathbf u_n}{\Delta t}=F(\mathbf u_{n+1})
-\end{equation}
+$$
 
 ## Overview
 
-This object computes a timestep to accelerate the convergence to steay state using a pseudo transient.
+This object computes a timestep to accelerate the convergence to steay state using pseudo transient continuation.
 The change in timestep is determined by the residual behaviour from one iteration to another, i.e. small changes in  residual indicate larger timesteps are allowed, while large changes indicate a decrease is necessary.
-There main methods are recognized and implemented.
+Following [!citep](bucker2009evolution) we recognize and implement three main methods.
 
 
-Methods supported
+###Methods supported
 
 
 - Switched evolution relaxation (SER)
@@ -44,3 +44,5 @@ where $\alpha$ is a user chosen parameter, $k$ is the surrent iteration step.
 !syntax inputs /Postprocessors/PseudoTimestep
 
 !syntax children /Postprocessors/PseudoTimestep
+
+!bibtex bibliography
