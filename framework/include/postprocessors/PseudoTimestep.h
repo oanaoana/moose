@@ -42,7 +42,7 @@ protected:
   Real timestep_EXP();
   Real timestep_RDM();
 
-  void output_pseudo_timestep(Real & curr_dt, const ExecFlagType & exec_type);
+  void output_pseudo_timestep(Real & curr_dt);
 
 public:
   static InputParameters validParams();

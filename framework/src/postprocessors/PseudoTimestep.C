@@ -86,7 +86,7 @@ PseudoTimestep::current_residual_norm() const
 }
 
 void
-PseudoTimestep::output_pseudo_timestep(Real & curr_dt, const ExecFlagType & exec_type)
+PseudoTimestep::output_pseudo_timestep(Real & curr_dt)
 {
   unsigned int curr_step = _fe_problem.timeStep();
 
@@ -185,6 +185,6 @@ PseudoTimestep::execute()
       }
       _dt = std::min(_max_dt, update_dt);
     }
-    output_pseudo_timestep(_dt, _current_execute_flag);
+    output_pseudo_timestep(_dt);
   }
 }
