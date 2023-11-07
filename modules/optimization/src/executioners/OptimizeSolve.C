@@ -11,6 +11,7 @@
 #include "OptimizationAppTypes.h"
 #include "OptimizationReporterBase.h"
 #include "Steady.h"
+//#include "libmesh/tao_optimization_solver.h"
 
 InputParameters
 OptimizeSolve::validParams()
@@ -76,6 +77,10 @@ OptimizeSolve::taoSolve()
   CHKERRQ(ierr);
 
   TaoSetMonitor(_tao, monitor, this, nullptr);
+
+  // Set petsc options
+  ierr = TaoSetFromOptions(_tao);
+  CHKERRQ(ierr);
 
   switch (_tao_solver_enum)
   {
@@ -173,9 +178,6 @@ OptimizeSolve::taoSolve()
 #endif
   CHKERRQ(ierr);
 
-  // Set petsc options
-  ierr = TaoSetFromOptions(_tao);
-  CHKERRQ(ierr);
 
   // Set bounds for bounded optimization
   ierr = TaoSetVariableBoundsRoutine(_tao, variableBoundsWrapper, this);
