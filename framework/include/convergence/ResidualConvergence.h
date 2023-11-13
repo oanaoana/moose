@@ -9,16 +9,24 @@
 
 #pragma once
 
-#include "MooseObject.h"
+#include "Convergence.h"
 
-class Convergence : public MooseObject
+class ResidualConvergence : public Convergence
 {
 public:
   static InputParameters validParams();
 
-  Convergence(const InputParameters & parameters);
+  ResidualConvergence(const InputParameters & parameters);
 
-  virtual void checkConvergence() = 0;
+  virtual void checkConvergence() override;
 
-  //FEProblemBase & _fe_problem;
+protected:
+
+  FEProblemBase & _fe_problem;
+
+  bool _initialized;
+  //const std::string & _type;
+  //const std::string & _position;
+  //const unsigned int _steps;
+
 };

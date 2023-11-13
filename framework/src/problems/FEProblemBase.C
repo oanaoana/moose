@@ -35,6 +35,7 @@
 #include "Parser.h"
 #include "ElementH1Error.h"
 #include "Function.h"
+#include "Convergence.h"
 #include "NonlinearSystem.h"
 #include "Distribution.h"
 #include "Sampler.h"
@@ -2240,6 +2241,21 @@ FEProblemBase::addFunction(const std::string & type,
     }
     else
       mooseError("Unrecognized function functor type");
+  }
+}
+
+
+void
+FEProblemBase::addConvergence(const std::string & type,
+                           const std::string & name,
+                           InputParameters & parameters)
+{
+  //parallel_object_only();
+
+  for (THREAD_ID tid = 0; tid < libMesh::n_threads(); tid++)
+  {
+    std::shared_ptr<Convergence> func = _factory.create<Convergence>(type, name, parameters, tid);
+    _convergences.addObject(func, tid);
   }
 }
 

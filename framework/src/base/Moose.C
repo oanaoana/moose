@@ -179,6 +179,8 @@ addActionTypes(Syntax & syntax)
   registerMooseObjectTask("add_control",                  Control,                false);
   registerMooseObjectTask("add_partitioner",              MoosePartitioner,       false);
 
+  registerMooseObjectTask("add_convergence",              Convergence,            false);
+
   // clang-format on
 
   registerTask("dynamic_object_registration", false);
@@ -448,6 +450,8 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
 
   registerSyntax("AddMeshDivisionAction", "MeshDivisions/*");
   syntax.registerSyntaxType("MeshDivisions/*", "MeshDivisionName");
+  registerSyntax("AddConvergenceAction", "Convergence/*");
+  syntax.registerSyntaxType("Convergence/*", "ConvergenceName");
 
   registerSyntax("GlobalParamsAction", "GlobalParams");
 

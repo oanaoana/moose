@@ -9,16 +9,15 @@
 
 #pragma once
 
-#include "MooseObject.h"
+#include "MooseObjectAction.h"
 
-class Convergence : public MooseObject
+class AddConvergenceAction : public MooseObjectAction
 {
 public:
   static InputParameters validParams();
 
-  Convergence(const InputParameters & parameters);
+  AddConvergenceAction(const InputParameters & params);
 
-  virtual void checkConvergence() = 0;
-
-  //FEProblemBase & _fe_problem;
+  virtual void act() override;
 };
+

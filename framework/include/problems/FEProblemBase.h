@@ -83,7 +83,7 @@ class LineSearch;
 class UserObject;
 class AutomaticMortarGeneration;
 class VectorPostprocessor;
-class Function;
+class Convergence;
 class MooseAppCoordTransform;
 class MortarUserObject;
 
@@ -607,6 +607,10 @@ public:
   addMeshDivision(const std::string & type, const std::string & name, InputParameters & params);
   /// Get a MeshDivision
   MeshDivision & getMeshDivision(const std::string & name, const THREAD_ID tid = 0) const;
+
+  virtual void
+  addConvergence(const std::string & type, const std::string & name,
+                      InputParameters & parameters);
 
   /**
    * add a MOOSE line search
@@ -2222,6 +2226,9 @@ protected:
 
   /// functions
   MooseObjectWarehouse<Function> _functions;
+
+  //convergence
+  MooseObjectWarehouse<Convergence> _convergences;
 
   /// nonlocal kernels
   MooseObjectWarehouse<KernelBase> _nonlocal_kernels;
