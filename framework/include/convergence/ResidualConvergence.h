@@ -25,7 +25,7 @@ protected:
   FEProblemBase & _fe_problem;
 
   bool _initialized;
-  //const std::string & _type;
+  const std::string & _type;
   //const std::string & _position;
   //const unsigned int _steps;
 

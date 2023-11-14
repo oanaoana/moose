@@ -10,8 +10,9 @@
 #pragma once
 
 #include "MooseObject.h"
+#include "SetupInterface.h"
 
-class Convergence : public MooseObject
+class Convergence : public MooseObject, public SetupInterface
 {
 public:
   static InputParameters validParams();

@@ -16,21 +16,21 @@ ResidualConvergence::validParams()
   InputParameters params = ResidualConvergence::validParams();
 
   params.addClassDescription("Check ResidualConvergence of the set up problem.");
-  MooseEnum convtype("time=1 space=2");
+  MooseEnum convtype("ResidualConvergence=1 space=2");
   MooseEnum convloc("random=1 centroid=2");
 
   //params.addParam<unsigned int>("steps", 0, "The number of ResidualConvergence steps to perform");
-  //params.addRequiredParam<MooseEnum>("type", convtype, "The type of ResidualConvergence studied");
+  params.addRequiredParam<MooseEnum>("type", convtype, "The type of ResidualConvergence studied");
   //params.addRequiredParam<MooseEnum>("position", convloc, "The type of ResidualConvergence studied");
 
   return params;
 }
 
 ResidualConvergence::ResidualConvergence(const InputParameters & parameters)
-  : MooseObject(parameters),
+  : Convergence(parameters),
    _fe_problem(*getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")),
-   _initialized(false)//,
-   //_type(getParam<MooseEnum>("type")),
+   _initialized(false),
+   _type(getParam<MooseEnum>("type"))
    //_position(getParam<MooseEnum>("position")),
    //_steps(getParam<unsigned int>("steps"))
 {
@@ -40,7 +40,7 @@ void
 ResidualConvergence::checkConvergence()
 {
 
-  Moose::out << "Time convergence "<< _type << std::endl;
+  Moose::out << "Time convergence "<< std::endl;
 
   /*
   switch (_type)

@@ -14,6 +14,9 @@ InputParameters
 Convergence::validParams()
 {
   InputParameters params = MooseObject::validParams();
+  params += SetupInterface::validParams();
+
+  params.registerBase("Convergence");
 
   params.addClassDescription("Check convergence of the set up problem.");
 
@@ -21,7 +24,8 @@ Convergence::validParams()
 }
 
 Convergence::Convergence(const InputParameters & parameters)
-  : MooseObject(parameters)
+  : MooseObject(parameters),
+    SetupInterface(this)
 {
 }
 
