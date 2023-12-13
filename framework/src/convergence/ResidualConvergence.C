@@ -10,17 +10,19 @@
 // MOOSE includes
 #include "ResidualConvergence.h"
 
+registerMooseObject("MooseApp", ResidualConvergence);
+
 InputParameters
 ResidualConvergence::validParams()
 {
-  InputParameters params = ResidualConvergence::validParams();
+  InputParameters params = Convergence::validParams();
 
   params.addClassDescription("Check ResidualConvergence of the set up problem.");
   MooseEnum convtype("ResidualConvergence=1 space=2");
   MooseEnum convloc("random=1 centroid=2");
 
   //params.addParam<unsigned int>("steps", 0, "The number of ResidualConvergence steps to perform");
-  params.addRequiredParam<MooseEnum>("type", convtype, "The type of ResidualConvergence studied");
+  //params.addRequiredParam<MooseEnum>("type", convtype, "The type of ResidualConvergence studied");
   //params.addRequiredParam<MooseEnum>("position", convloc, "The type of ResidualConvergence studied");
 
   return params;
@@ -29,8 +31,8 @@ ResidualConvergence::validParams()
 ResidualConvergence::ResidualConvergence(const InputParameters & parameters)
   : Convergence(parameters),
    _fe_problem(*getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")),
-   _initialized(false),
-   _type(getParam<MooseEnum>("type"))
+   _var_name(getParam<std::string>("variable")),
+   _initialized(false)
    //_position(getParam<MooseEnum>("position")),
    //_steps(getParam<unsigned int>("steps"))
 {

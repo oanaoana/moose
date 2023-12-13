@@ -13,8 +13,6 @@
 
 registerMooseAction("MooseApp", AddConvergenceAction, "add_convergence");
 
-AddConvergenceAction::AddConvergenceAction(const InputParameters & params) : MooseObjectAction(params) {}
-
 InputParameters
 AddConvergenceAction::validParams()
 {
@@ -22,6 +20,8 @@ AddConvergenceAction::validParams()
   params.addClassDescription("Add a Convergence object to the simulation.");
   return params;
 }
+
+AddConvergenceAction::AddConvergenceAction(const InputParameters & params) : MooseObjectAction(params) {}
 
 void
 AddConvergenceAction::act()

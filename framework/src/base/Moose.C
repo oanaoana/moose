@@ -311,6 +311,7 @@ addActionTypes(Syntax & syntax)
                            "(setup_variable_complete)"
                            "(setup_quadrature)"
                            "(add_function)"
+                           "(add_convergence)"
                            "(add_periodic_bc)"
                            "(add_user_object)"
                            "(add_distribution)"
