@@ -19,7 +19,7 @@ public:
 
   Convergence(const InputParameters & parameters);
 
-  virtual void checkConvergence() = 0;
+  virtual bool checkConvergence() const = 0;
 
   //FEProblemBase & _fe_problem;
 };

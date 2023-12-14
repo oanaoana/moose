@@ -18,7 +18,7 @@ public:
 
   ResidualConvergence(const InputParameters & parameters);
 
-  virtual void checkConvergence() override;
+  virtual bool checkConvergence() const override;
 
 protected:
 

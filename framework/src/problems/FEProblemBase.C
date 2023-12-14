@@ -2310,6 +2310,32 @@ FEProblemBase::getFunction(const std::string & name, const THREAD_ID tid)
   return *ret;
 }
 
+
+bool
+FEProblemBase::hasConvergence(const std::string & name, const THREAD_ID tid)
+{
+  return _convergences.hasActiveObject(name, tid);
+}
+
+Convergence &
+FEProblemBase::getConvergence(const std::string & name, const THREAD_ID tid)
+{
+  // This thread lock is necessary since this method will create functions
+  // for all threads if one is missing.
+  //Threads::spin_mutex::scoped_lock lock(get_function_mutex);
+
+  if (!hasConvergence(name, tid))
+  {
+      mooseError("Unable to find convergence criteria " + name);
+  }
+
+  auto * const ret = dynamic_cast<Convergence *>(_convergences.getActiveObject(name, tid).get());
+  if (!ret)
+    mooseError("No convergence criteria named ", name, " of appropriate type");
+
+  return *ret;
+}
+
 void
 FEProblemBase::addMeshDivision(const std::string & type,
                                const std::string & name,
@@ -7844,6 +7870,10 @@ FEProblemBase::checkNonlinearConvergence(std::string & msg,
   system._last_nl_rnorm = fnorm;
   system._current_nl_its = static_cast<unsigned int>(it);
 
+  const auto & convergence = getConvergence("conv");
+
+  convergence.checkConvergence();
+  
   msg = oss.str();
   if (_app.multiAppLevel() > 0)
     MooseUtils::indentMessage(_app.name(), msg);

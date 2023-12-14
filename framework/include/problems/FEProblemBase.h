@@ -601,6 +601,7 @@ public:
   addFunction(const std::string & type, const std::string & name, InputParameters & parameters);
   virtual bool hasFunction(const std::string & name, const THREAD_ID tid = 0);
   virtual Function & getFunction(const std::string & name, const THREAD_ID tid = 0);
+  
 
   /// Add a MeshDivision
   void
@@ -611,6 +612,8 @@ public:
   virtual void
   addConvergence(const std::string & type, const std::string & name,
                       InputParameters & parameters);
+  virtual Convergence & getConvergence(const std::string & name, const THREAD_ID tid = 0);
+  virtual bool hasConvergence(const std::string & name, const THREAD_ID tid=0);
 
   /**
    * add a MOOSE line search
