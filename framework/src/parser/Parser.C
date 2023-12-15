@@ -1421,6 +1421,7 @@ Parser::extractParams(const std::string & prefix, InputParameters & p)
         setscalar(MaterialName, string);
         setscalar(DistributionName, string);
         setscalar(PositionsName, string);
+        setscalar(ConvergenceName, string);
         setscalar(SamplerName, string);
         setscalar(TagName, string);
         setscalar(TimesName, string);
@@ -1497,6 +1498,7 @@ Parser::extractParams(const std::string & prefix, InputParameters & p)
         setvector(ReporterName, string);
         setvector(CLIArgString, string);
         setvector(PositionsName, string);
+        setvector(ConvergenceName, string);
         setvector(TimesName, string);
         setvector(ReporterValueName, string);
         setvector(ExecutorName, string);
