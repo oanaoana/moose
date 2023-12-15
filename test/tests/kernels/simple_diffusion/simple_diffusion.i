@@ -32,11 +32,19 @@
   []
 []
 
+[Convergence]
+  [res_conv]
+    type = ResidualConvergence
+    variable = blah
+  []
+[]
+
 [Executioner]
   type = Steady
   solve_type = 'PJFNK'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'hypre'
+  nonlinear_convergence = res_conv
 []
 
 [Outputs]
