@@ -58,6 +58,9 @@ FEProblemSolve::validParams()
                         "be looser than the standard linear tolerance");
 
   params += Moose::PetscSupport::getPetscValidParams();
+  params.addParam<ConvergenceName>(
+      "nonlinear_convergence",
+      "Name of Convergence object to use to assess convergence of the nonlinear solve");
   params.addParam<Real>("l_tol", 1.0e-5, "Linear Relative Tolerance");
   params.addParam<Real>("l_abs_tol", 1.0e-50, "Linear Absolute Tolerance");
   params.addParam<unsigned int>("l_max_its", 10000, "Max Linear Iterations");
@@ -221,6 +224,9 @@ FEProblemSolve::FEProblemSolve(Executioner & ex)
   _problem.setNonlinearForcedIterations(getParam<unsigned int>("nl_forced_its"));
 
   _problem.setNonlinearAbsoluteDivergenceTolerance(getParam<Real>("nl_abs_div_tol"));
+
+  if (isParamValid("nonlinear_convergence"))
+    _problem.setNonlinearConvergenceObject(getParam<ConvergenceName>("nonlinear_convergence"));
 
   _nl.setDecomposition(_splitting);
 

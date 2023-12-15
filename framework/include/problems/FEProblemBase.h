@@ -601,7 +601,6 @@ public:
   addFunction(const std::string & type, const std::string & name, InputParameters & parameters);
   virtual bool hasFunction(const std::string & name, const THREAD_ID tid = 0);
   virtual Function & getFunction(const std::string & name, const THREAD_ID tid = 0);
-  
 
   /// Add a MeshDivision
   void
@@ -2050,6 +2049,15 @@ public:
   }
 
   /**
+   * Sets the nonlinear convergence object name if there is one
+   */
+  void setNonlinearConvergenceObject(const ConvergenceName & convergence)
+  {
+    _nonlinear_convergence_name = convergence;
+    _set_nonlinear_convergence_name = true;
+  }
+
+  /**
    * Setter for whether we're computing the scaling jacobian
    */
   void computingScalingJacobian(bool computing_scaling_jacobian)
@@ -2190,6 +2198,11 @@ protected:
 
   /// the absolute non linear divergence tolerance
   Real _nl_abs_div_tol = -1;
+
+  /// Nonlinear convergence name
+  ConvergenceName _nonlinear_convergence_name;
+  /// Flag that the nonlinear convergence name has been set
+  bool _set_nonlinear_convergence_name;
 
   /// The nonlinear system names
   const std::vector<NonlinearSystemName> _nl_sys_names;

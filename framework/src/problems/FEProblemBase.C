@@ -329,6 +329,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _t_step(declareRecoverableData<int>("t_step")),
     _dt(declareRestartableData<Real>("dt")),
     _dt_old(declareRestartableData<Real>("dt_old")),
+    _set_nonlinear_convergence_name(false),
     _nl_sys_names(getParam<std::vector<NonlinearSystemName>>("nl_sys_names")),
     _num_nl_sys(_nl_sys_names.size()),
     _nl(_num_nl_sys, nullptr),
@@ -7870,10 +7871,12 @@ FEProblemBase::checkNonlinearConvergence(std::string & msg,
   system._last_nl_rnorm = fnorm;
   system._current_nl_its = static_cast<unsigned int>(it);
 
-  const auto & convergence = getConvergence("conv");
+  if (_set_nonlinear_convergence_name)
+  {
+    const auto & convergence = getConvergence(_nonlinear_convergence_name);
+    convergence.checkConvergence();
+  }
 
-  convergence.checkConvergence();
-  
   msg = oss.str();
   if (_app.multiAppLevel() > 0)
     MooseUtils::indentMessage(_app.name(), msg);
