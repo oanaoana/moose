@@ -137,9 +137,12 @@ class VectorValue;
 typedef VectorValue<Real> RealVectorValue;
 typedef Eigen::Matrix<Real, Moose::dim, 1> RealDIMValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> RealEigenVector;
+typedef Eigen::Matrix<ADReal, Eigen::Dynamic, 1> ADRealEigenVector;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim> RealVectorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim * Moose::dim> RealTensorArrayValue;
 typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> RealEigenMatrix;
+typedef Eigen::Matrix<ADReal, Eigen::Dynamic, Eigen::Dynamic> ADRealEigenMatrix;
+
 template <typename>
 class TypeVector;
 template <typename>
@@ -174,6 +177,24 @@ struct DecrementRank<Eigen::Matrix<Real, Eigen::Dynamic, Moose::dim>>
 {
   typedef Eigen::Matrix<Real, Eigen::Dynamic, 1> type;
 };
+
+template <>
+struct IncrementRank<Eigen::Matrix<ADReal, Eigen::Dynamic, 1>>
+{
+  typedef Eigen::Matrix<ADReal, Eigen::Dynamic, Moose::dim> type;
+};
+
+template <>
+struct IncrementRank<Eigen::Matrix<ADReal, Eigen::Dynamic, Moose::dim>>
+{
+  typedef Eigen::Matrix<ADReal, Eigen::Dynamic, Moose::dim * Moose::dim> type;
+};
+
+template <>
+struct DecrementRank<Eigen::Matrix<ADReal, Eigen::Dynamic, Moose::dim>>
+{
+  typedef Eigen::Matrix<ADReal, Eigen::Dynamic, 1> type;
+};
 }
 }
 
@@ -181,6 +202,11 @@ namespace MetaPhysicL
 {
 template <typename U>
 struct ReplaceAlgebraicType<libMesh::RealEigenVector, U>
+{
+  typedef U type;
+};
+template <typename U>
+struct ReplaceAlgebraicType<libMesh::ADRealEigenVector, U>
 {
   typedef U type;
 };
@@ -335,7 +361,9 @@ typedef typename OutputTools<RealVectorValue>::VariableTestDivergence VectorVari
 
 // types for array variable
 typedef typename OutputTools<RealEigenVector>::VariableValue ArrayVariableValue;
+typedef typename OutputTools<ADRealEigenVector>::VariableValue ADArrayVariableValue;
 typedef typename OutputTools<RealEigenVector>::VariableGradient ArrayVariableGradient;
+typedef typename OutputTools<ADRealEigenVector>::VariableGradient ADArrayVariableGradient;
 typedef typename OutputTools<RealEigenVector>::VariableSecond ArrayVariableSecond;
 typedef typename OutputTools<RealEigenVector>::VariableCurl ArrayVariableCurl;
 typedef typename OutputTools<RealEigenVector>::VariableDivergence ArrayVariableDivergence;
@@ -352,6 +380,13 @@ typedef typename OutputTools<RealEigenVector>::VariableTestCurl ArrayVariableTes
 typedef typename OutputTools<RealEigenVector>::VariableTestDivergence ArrayVariableTestDivergence;
 
 /**
+ * AD Array typedefs
+ */
+/*
+typedef typename OutputTools<ADRealEigenVector>::VariableTestValue ADArrayVariableTestValue;
+typedef typename OutputTools<ADRealEigenVector>::VariableTestGradient ADArrayVariableTestGradient;
+*/
+/**
  * AD typedefs
  */
 typedef libMesh::VectorValue<ADReal> ADRealVectorValue;
@@ -365,6 +400,9 @@ typedef MooseArray<ADRealVectorValue> ADVariableGradient;
 typedef MooseArray<ADRealTensorValue> ADVariableSecond;
 typedef MooseArray<ADRealVectorValue> ADVectorVariableValue;
 typedef MooseArray<ADRealTensorValue> ADVectorVariableGradient;
+//typedef MooseArray<ADRealEigenVector> ADArrayVariableValue;
+//typedef MooseArray<ADRealEigenVector> ADArrayVariableGradient;
+
 typedef MooseArray<libMesh::TypeNTensor<3, ADReal>> ADVectorVariableSecond;
 
 namespace Moose
@@ -468,7 +506,7 @@ struct ADType<DenseMatrix<T>>
 template <>
 struct ADType<RealEigenVector>
 {
-  typedef RealEigenVector type;
+  typedef ADRealEigenVector type;
 };
 template <>
 struct ADType<VariableValue>

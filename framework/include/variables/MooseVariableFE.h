@@ -29,6 +29,7 @@ class MooseVariableFE;
 typedef MooseVariableFE<Real> MooseVariable;
 typedef MooseVariableFE<RealVectorValue> VectorMooseVariable;
 typedef MooseVariableFE<RealEigenVector> ArrayMooseVariable;
+//typedef MooseVariableFE<ADRealEigenVector> ADArrayMooseVariable;
 
 /**
  * Class for stuff related to variables
@@ -40,6 +41,7 @@ typedef MooseVariableFE<RealEigenVector> ArrayMooseVariable;
  * Real                Real                  Real
  * RealVectorValue     RealVectorValue       Real
  * RealEigenVector     Real                  RealEigenVector
+ * ADRealEigenVector   ADReal                ADRealEigenVector
  *
  */
 template <typename OutputType>
