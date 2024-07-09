@@ -51,7 +51,7 @@ ADArrayKernel::ADArrayKernel(const InputParameters & parameters)
 void
 ADArrayKernel::computeResidual()
 {
-    /*
+  
   prepareVectorTag(_assembly, _var.number());
 
   precalculateResidual();
@@ -61,69 +61,38 @@ ADArrayKernel::computeResidual()
     for (_i = 0; _i < _test.size(); _i++)
     {
       _work_vector.setZero();
+
       computeQpResidual(_work_vector);
-      mooseAssert(_work_vector.size() == _count,
-                  "Size of local residual is not equal to the number of array variable compoments");
-      _work_vector *= _JxW[_qp] * _coord[_qp];
-      _assembly.saveLocalArrayResidual(_local_re, _i, _test.size(), _work_vector);
+      auto raw_work_vector = MetaPhysicL::raw_value(_work_vector);
+      raw_work_vector *= _JxW[_qp] * _coord[_qp];
+      _assembly.saveLocalArrayResidual(_local_re, _i, _test.size(), raw_work_vector);
     }
   }
 
   accumulateTaggedLocalResidual();
-
-  if (_has_save_in)
-  {
-    Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
-    for (const auto & var : _save_in)
-    {
-      auto * avar = dynamic_cast<ArrayMooseVariable *>(var);
-      if (avar)
-        avar->addSolution(_local_re);
-      else
-        mooseError("Save-in variable for an array kernel must be an array variable");
-    }
-  }
-  */
 }
 
 void
 ADArrayKernel::computeJacobian()
 { 
-    /*
-  prepareMatrixTag(_assembly, _var.number(), _var.number());
-
+  _local_ad_re.resize(_test.size() * _count);
   precalculateJacobian();
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
   {
-    initQpJacobian();
+    initQpResidual();
     for (_i = 0; _i < _test.size(); _i++)
-      for (_j = 0; _j < _phi.size(); _j++)
       {
-        _work_vector = computeQpJacobian() * _JxW[_qp] * _coord[_qp];
-        _assembly.saveDiagLocalArrayJacobian(
-            _local_ke, _i, _test.size(), _j, _phi.size(), _var.number(), _work_vector);
+        computeQpResidual(_work_vector);
+        _work_vector *= _JxW[_qp] * _coord[_qp];
+        _assembly.saveLocalADArray(_local_ad_re, _i, _test.size(), _work_vector); 
       }
   }
+  //_assembly.cacheJacobian(_local_ad_re, _var.dofIndices(), _var.scalingFactor(), Assembly::LocalDataKey{}, _var.getMatrixTags());
+  //accumulateTaggedLocalMatrix();
 
-  accumulateTaggedLocalMatrix();
-
-  if (_has_diag_save_in)
-  {
-    DenseVector<Number> diag = _assembly.getJacobianDiagonal(_local_ke);
-    Threads::spin_mutex::scoped_lock lock(Threads::spin_mtx);
-    for (const auto & var : _diag_save_in)
-    {
-      auto * avar = dynamic_cast<ArrayMooseVariable *>(var);
-      if (avar)
-        avar->addSolution(diag);
-      else
-        mooseError("Save-in variable for an array kernel must be an array variable");
-    }
-  }
-  */
+  //using addJacobian instead of mimicking cacheJacobian avoids dealing with tagged matrix
+  addJacobian(_assembly, _local_ad_re, _var.dofIndices(), _var.scalingFactor());
 }
-
-
 
 void 
 ADArrayKernel::computeOffDiagJacobian(unsigned int jvar)

@@ -18,7 +18,6 @@ public:
   static InputParameters validParams();
 
   ADArrayKernel(const InputParameters & parameters);
-
   
   /// Compute this ArrayKernel's contribution to the residual
   virtual void computeResidual() override;
@@ -67,6 +66,8 @@ protected:
 
   /// Number of components of the array variable
   const unsigned int _count;
+
+  std::vector<ADReal> _local_ad_re;
 
 private:
   /// Work vector for residual and diag jacobian
