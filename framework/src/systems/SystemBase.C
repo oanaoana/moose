@@ -779,7 +779,7 @@ SystemBase::addVariable(const std::string & var_type,
         _subproblem.addFunctor(name, *functor, tid);
       else if (auto * const functor = dynamic_cast<Moose::FunctorBase<ADRealVectorValue> *>(fe_var))
         _subproblem.addFunctor(name, *functor, tid);
-      else if (auto * const functor = dynamic_cast<Moose::FunctorBase<RealEigenVector> *>(fe_var))
+      else if (auto * const functor = dynamic_cast<Moose::FunctorBase<ADRealEigenVector> *>(fe_var))
         _subproblem.addFunctor(name, *functor, tid);
       else
         mooseError("This should be a functor");
