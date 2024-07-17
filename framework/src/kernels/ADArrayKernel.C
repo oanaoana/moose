@@ -33,6 +33,7 @@ ADArrayKernel::ADArrayKernel(const InputParameters & parameters)
                                             "variable",
                                             Moose::VarKindType::VAR_SOLVER,
                                             Moose::VarFieldType::VAR_FIELD_ARRAY),
+    ADFunctorInterface(this),                                   
     _var(*mooseVariable()),
     _test(_var.phi()),
     _grad_test(_var.gradPhi()),
@@ -61,7 +62,6 @@ ADArrayKernel::computeResidual()
     for (_i = 0; _i < _test.size(); _i++)
     {
       _work_vector.setZero();
-
       computeQpResidual(_work_vector);
       auto raw_work_vector = MetaPhysicL::raw_value(_work_vector);
       raw_work_vector *= _JxW[_qp] * _coord[_qp];
@@ -94,8 +94,10 @@ ADArrayKernel::computeJacobian()
   addJacobian(_assembly, _local_ad_re, _var.dofIndices(), _var.scalingFactor());
 }
 
+/*
 void 
 ADArrayKernel::computeOffDiagJacobian(unsigned int jvar)
 {
 
 }
+*/

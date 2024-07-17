@@ -38,6 +38,7 @@ MooseVariableData<OutputType>::MooseVariableData(const MooseVariableField<Output
     _assembly(_subproblem.assembly(_tid, var.kind() == Moose::VAR_SOLVER ? sys.number() : 0)),
     _element_type(element_type),
     _ad_zero(0),
+    _ad_zero_eigen(0),
     _need_ad_u_dot(false),
     _need_ad_u_dotdot(false),
     _need_second(false),
@@ -413,14 +414,208 @@ MooseVariableData<OutputType>::divPhiFace() const
   return *_div_phi_face;
 }
 
+template <>
+void
+MooseVariableData<RealEigenVector>::assignADNodalValue(const ADReal & value,
+                                                       const unsigned int & component)
+{
+  _ad_nodal_value(component) = value;
+}
+
+template <>
+void
+MooseVariableData<RealEigenVector>::fetchADDoFValues()
+{
+  Moose::out<<"I am learning how to support AD with array variables"<<std::endl;
+  auto n_dofs = _dof_indices.size();
+  libmesh_assert(n_dofs);
+  _loc_count++;
+  Moose::out<<_loc_count <<"-th call to fetchADDoFValues"<<"Size dofs: "<<n_dofs<<std::endl;
+  //Moose::out<<"Count var"<<_count<<std::endl;
+  _ad_dof_values_eigen.resize(n_dofs);
+
+  //Moose::out << "n_dofs: " << n_dofs << std::endl;
+  //Moose::out << "ad_dof size: " << _ad_dof_values_eigen.size() << std::endl;
+
+  //const bool do_derivatives =
+      //ADReal::do_derivatives && _sys.number() == _subproblem.currentNlSysNum();
+
+  getArrayDoFADValues(_sys.getVector(_solution_tag), n_dofs, _ad_dof_values_eigen);
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    for (unsigned int j = 0; j < _count; ++j)
+    {
+      auto& ad_dof_entries = _ad_dof_values_eigen[i](j);
+      auto& derivatives = ad_dof_entries.derivatives();
+      Moose::derivInsert(derivatives, _dof_indices[i], 1.);
+      Moose::out << "derivatives: " << derivatives.size() << std::endl;
+      Moose::out << "ad_dof_entries " << ad_dof_entries << std::endl;
+      assignADNodalValue(raw_value(ad_dof_entries), i);
+    }
+  }
+}
+
+template <>
+void
+MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const unsigned int nqp)
+{
+  Moose::out<<"computeAD size of dof_indices: "<<_dof_indices.size()<<std::endl;
+  Moose::out<<"computeAD num_dofs: "<<num_dofs<<std::endl;
+
+  if (num_dofs > 0)
+    fetchADDoFValues();
+
+  createArrayDofIndices(_array_dof_indices, _dof_indices, _count);  
+
+  Moose::out<<"computeAD size of ad_dof_values_eigen: "<<_ad_dof_values_eigen.size()<<std::endl;
+
+  bool is_transient = _subproblem.isTransient();
+  auto && active_coupleable_matrix_tags = _subproblem.getActiveFEVariableCoupleableMatrixTags(_tid);
+
+  // Map grad_phi using Eigen so that we can perform array operations easier
+  if (_qrule == _current_qrule)
+  {
+    _mapped_grad_phi.resize(num_dofs);
+    for (unsigned int i = 0; i < num_dofs; i++)
+    {
+      _mapped_grad_phi[i].resize(nqp, Eigen::Map<RealDIMValue>(nullptr));
+      for (unsigned int qp = 0; qp < nqp; qp++)
+        // Note: this does NOT do any allocation.  It is "reconstructing" the object in place
+        new (&_mapped_grad_phi[i][qp])
+            Eigen::Map<RealDIMValue>(const_cast<Real *>(&(*_current_grad_phi)[i][qp](0)));
+    }
+  }
+  else
+  {
+    _mapped_grad_phi_face.resize(num_dofs);
+    for (unsigned int i = 0; i < num_dofs; i++)
+    {
+      _mapped_grad_phi_face[i].resize(nqp, Eigen::Map<RealDIMValue>(nullptr));
+      for (unsigned int qp = 0; qp < nqp; qp++)
+        // Note: this does NOT do any allocation.  It is "reconstructing" the object in place
+        new (&_mapped_grad_phi_face[i][qp])
+            Eigen::Map<RealDIMValue>(const_cast<Real *>(&(*_current_grad_phi)[i][qp](0)));
+    }
+  }
+
+  for (auto tag : _required_vector_tags)
+  {
+    if (_need_vector_tag_u[tag])
+      _vector_tag_u[tag].resize(nqp);
+    if (_need_vector_tag_grad[tag])
+      _vector_tag_grad[tag].resize(nqp);
+  }
+
+  for (auto tag : active_coupleable_matrix_tags)
+    if (_need_matrix_tag_u[tag])
+      _matrix_tag_u[tag].resize(nqp);
+  
+  for (unsigned int i = 0; i < nqp; ++i)
+  {
+    for (auto tag : _required_vector_tags)
+    {
+      if (_need_vector_tag_u[tag])
+        _vector_tag_u[tag][i].setZero(_count);
+      if (_need_vector_tag_grad[tag])
+        _vector_tag_grad[tag][i].setZero(_count, LIBMESH_DIM);
+    }
+
+    for (auto tag : active_coupleable_matrix_tags)
+      if (_need_matrix_tag_u[tag])
+        _matrix_tag_u[tag][i].setZero(_count);
+
+  }
+
+  
+  for (unsigned int i = 0; i < num_dofs; i++)
+  {
+    for (unsigned int qp = 0; qp < nqp; qp++)
+    {
+      const OutputShape phi_local = (*_current_phi)[i][qp];
+      const OutputShapeGradient dphi_qp = (*_current_grad_phi)[i][qp];
+
+      for (auto tag : _required_vector_tags)
+      {
+        if (_need_vector_tag_u[tag])
+          _vector_tag_u[tag][qp] += phi_local * _vector_tags_dof_u[tag][i];
+        if (_need_vector_tag_grad[tag])
+          for (const auto d : make_range(Moose::dim))
+            _vector_tag_grad[tag][qp].col(d) += dphi_qp(d) * _vector_tags_dof_u[tag][i];
+      }
+
+      for (auto tag : active_coupleable_matrix_tags)
+        if (_need_matrix_tag_u[tag])
+          _matrix_tag_u[tag][qp] += phi_local * _matrix_tags_dof_u[tag][i];
+    }
+  }
+  
+  // Have to do this because upon construction this won't initialize any of the derivatives
+  // (because DualNumber::do_derivatives is false at that time).
+  //_ad_zero_eigen = 0;
+
+  _ad_dof_values_eigen.resize(num_dofs);
+  if (_need_ad_u)
+    _ad_u.resize(nqp);
+
+  if (_need_ad_grad_u)
+    _ad_grad_u.resize(nqp);
+
+  const bool do_derivatives = Moose::doDerivatives(_subproblem, _sys);
+
+  for (unsigned int qp = 0; qp < nqp; qp++)
+  {
+    if (_need_ad_u)
+      _ad_u[qp] = _ad_zero_eigen;
+  }
+
+  //getArrayDoFADValues(_sys.getVector(_solution_tag), n_dofs, _ad_dof_values_eigen);
+  
+  //don't think I need this?
+  /*for (unsigned int i = 0; i < num_dofs; i++)
+  { 
+    getArrayDoFADValues(_sys.getVector(_solution_tag), n_dofs, _ad_dof_values_eigen);
+    // NOTE!  You have to do this AFTER setting the value!
+    if (do_derivatives)
+      Moose::derivInsert(_ad_dof_values_eigen[i].derivatives(), _dof_indices[i], 1.);
+  }*/
+  
+  
+  // Now build up the solution at each quadrature point:
+  for (unsigned int i = 0; i < num_dofs; i++)
+  {
+    for (unsigned int qp = 0; qp < nqp; qp++)
+    {
+      if (_need_ad_u)
+        _ad_u[qp] += _ad_dof_values_eigen[i] * (*_current_phi)[i][qp];
+      
+      /*
+      if (_need_ad_grad_u)
+      {
+        // The latter check here is for handling the fact that we have not yet implemented
+        // calculation of ad_grad_phi for neighbor and neighbor-face, so if we are in that
+        // situation we need to default to using the non-ad grad_phi
+        if (_displaced && _current_ad_grad_phi)
+          _ad_grad_u[qp] += _ad_dof_values_eigen[i] * (*_current_ad_grad_phi)[i][qp];
+        else
+          _ad_grad_u[qp] += _ad_dof_values_eigen[i] * (*_current_grad_phi)[i][qp];
+      }
+      */
+      
+    }
+  }
+      
+}
+
 template <typename OutputType>
 void
 MooseVariableData<OutputType>::computeValues()
 {
   unsigned int num_dofs = _dof_indices.size();
-
+ 
   if (num_dofs > 0)
     fetchDoFValues();
+
+  Moose::out<<"computeAD size of ad_dof_values: "<<_ad_dof_values.size()<<std::endl;
 
   bool is_transient = _subproblem.isTransient();
   unsigned int nqp = _current_qrule->n_points();
@@ -674,6 +869,7 @@ MooseVariableData<RealEigenVector>::computeValues()
 {
   unsigned int num_dofs = _dof_indices.size();
 
+  Moose::out<<"computeValues size of dof_indices: "<<_dof_indices.size()<<std::endl;
   if (num_dofs > 0)
     fetchDoFValues();
 
@@ -952,8 +1148,10 @@ MooseVariableData<RealEigenVector>::computeValues()
           _matrix_tag_u[tag][qp] += phi_local * _matrix_tags_dof_u[tag][i];
     }
   }
-  // No AD support for array variable yet.
+  if (_need_ad)
+    computeAD(num_dofs, nqp);
 }
+
 
 template <typename OutputType>
 void
@@ -1281,14 +1479,6 @@ MooseVariableData<OutputType>::computeAD(const unsigned int num_dofs, const unsi
   if (_need_ad_grad_u_dot && !_time_integrator)
     for (MooseIndex(nqp) qp = 0; qp < nqp; ++qp)
       _ad_grad_u_dot[qp] = _grad_u_dot[qp];
-}
-
-template <>
-void
-MooseVariableData<RealEigenVector>::computeAD(const unsigned int /*num_dofs*/,
-                                              const unsigned int /*nqp*/)
-{
-  mooseError("AD for array variable has not been implemented");
 }
 
 template <typename OutputType>
@@ -1766,7 +1956,7 @@ void
 MooseVariableData<OutputType>::computeNodalValues()
 {
   if (_has_dof_indices)
-  {
+  { Moose::out<<"ComputeNodalValues dof_indices: "<<_dof_indices.size()<<" AD "<<_need_ad<<std::endl;
     fetchDoFValues();
     assignNodalValue();
 
@@ -1795,13 +1985,6 @@ MooseVariableData<OutputType>::fetchADDoFValues()
       Moose::derivInsert(_ad_dof_values[i].derivatives(), _dof_indices[i], 1.);
     assignADNodalValue(_ad_dof_values[i], i);
   }
-}
-
-template <>
-void
-MooseVariableData<RealEigenVector>::fetchADDoFValues()
-{
-  mooseError("I do not know how to support AD with array variables");
 }
 
 template <>

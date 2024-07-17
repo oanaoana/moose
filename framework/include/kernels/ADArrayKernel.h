@@ -11,8 +11,9 @@
 
 #include "KernelBase.h"
 #include "MooseVariableInterface.h"
+#include "ADFunctorInterface.h"
 
-class ADArrayKernel : public KernelBase, public MooseVariableInterface<RealEigenVector>
+class ADArrayKernel : public KernelBase, public MooseVariableInterface<RealEigenVector>, public ADFunctorInterface
 {
 public:
   static InputParameters validParams();
@@ -26,7 +27,7 @@ public:
   virtual void computeJacobian() override;
 
   /// Computes full Jacobian of jvar and the array variable this kernel operates on
-  virtual void computeOffDiagJacobian(unsigned int jvar) override;
+  //virtual void computeOffDiagJacobian(unsigned int jvar) override;
 
   virtual const ArrayMooseVariable & variable() const override { return _var; }
 
