@@ -474,15 +474,7 @@ template <>
 void
 MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const unsigned int nqp)
 {
-  //Moose::out << "computeAD size of dof_indices: " << _dof_indices.size() << std::endl;
-  //Moose::out << "computeAD num_dofs: " << num_dofs << std::endl;
-
-  //if (num_dofs > 0)
-    //getArrayDoFADValues(_sys.getVector(_solution_tag), num_dofs, _ad_dof_values_eigen);
-  
-  //std::cout<< "Init Size of _ad_dof_values_eigen "<< _ad_dof_values_eigen.size()<< std::endl;
   createArrayDofIndices(_array_dof_indices, _dof_indices, _count);
-  //std::cout<< "Size of _array_dof_indices "<< _array_dof_indices.size() << std::endl;
 
   // Have to do this because upon construction this won't initialize any of the derivatives
   // (because DualNumber::do_derivatives is false at that time).
@@ -498,14 +490,6 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const
 
   const bool do_derivatives = Moose::doDerivatives(_subproblem, _sys);
 
-  for (unsigned int qp = 0; qp < nqp; qp++)
-  {
-    //if (_need_ad_u)
-      //_ad_u[qp] = _ad_zero_eigen;
-    //if (_need_ad_grad_u)
-      //for  (const auto d : make_range(Moose::dim))
-        //_ad_grad_u[qp].col(d) = _ad_zero_eigen;
-  }
   fetchADDoFValues();
   
   // Now build up the solution at each quadrature point:
@@ -545,20 +529,6 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const
       }
     }
   }
-      /*
-      if (_need_ad_grad_u)
-      {
-        // The latter check here is for handling the fact that we have not yet implemented
-        // calculation of ad_grad_phi for neighbor and neighbor-face, so if we are in that
-        // situation we need to default to using the non-ad grad_phi
-        for (const auto d : make_range(Moose::dim))
-        {
-          if (_displaced && _current_ad_grad_phi)
-            _ad_grad_u[qp].col(d) += _ad_dof_values_eigen[i] * (*_current_ad_grad_phi)[i][qp](d);
-          else
-            _ad_grad_u[qp].col(d)  += _ad_dof_values_eigen[i] * (*_current_grad_phi)[i][qp](d);
-        }
-        */
 
   std::cout<<"*********************"<<std::endl;
   std::cout
@@ -570,7 +540,7 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const
       << boost::typeindex::type_id_with_cvr<decltype(_ad_grad_u[0])>().pretty_name()
       << std::endl;
   std::cout
-      << "Type of _ad_grad_u[qp].col(1): "
+      << "Type of _ad_grad_u[qp].col(1)(0): "
       << boost::typeindex::type_id_with_cvr<decltype(_ad_grad_u[0].col(1)(0))>().pretty_name()
       << std::endl;
 
