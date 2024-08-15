@@ -447,6 +447,7 @@ public:
   void computeIncrementAtNode(const NumericVector<Number> & increment_vec);
 
 private:
+  unsigned int _loc_count=0;
   /**
    * Helper methods for assigning nodal values from their corresponding solution values (dof
    * values as they're referred to here in this class). These methods are only truly meaningful
@@ -481,6 +482,10 @@ private:
 
   /// A zero AD variable
   ADReal _ad_zero;
+
+  /// A zero AD RealEigenVector
+  ADRealEigenVector _ad_zero_eigen;
+  
 
   /// AD u dot flags
   mutable bool _need_ad_u_dot;
@@ -536,8 +541,11 @@ private:
   ADTemplateVariableGradient<OutputType> _ad_grad_u;
   ADTemplateVariableSecond<OutputType> _ad_second_u;
   MooseArray<ADReal> _ad_dof_values;
+  MooseArray<ADRealEigenVector> _ad_dof_values_eigen;
   MooseArray<ADReal> _ad_dofs_dot;
+  MooseArray<ADRealEigenVector> _ad_dofs_dot_eigen;
   MooseArray<ADReal> _ad_dofs_dotdot;
+  MooseArray<ADRealEigenVector> _ad_dofs_dotdot_eigen;
   ADTemplateVariableValue<OutputType> _ad_u_dot;
   ADTemplateVariableValue<OutputType> _ad_u_dotdot;
   ADTemplateVariableGradient<OutputType> _ad_grad_u_dot;

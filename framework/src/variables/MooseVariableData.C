@@ -529,7 +529,7 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const
       }
     }
   }
-
+  /*
   std::cout<<"*********************"<<std::endl;
   std::cout
       << "Type of _ad_grad_u: "
@@ -543,7 +543,7 @@ MooseVariableData<RealEigenVector>::computeAD(const unsigned int num_dofs, const
       << "Type of _ad_grad_u[qp].col(1)(0): "
       << boost::typeindex::type_id_with_cvr<decltype(_ad_grad_u[0].col(1)(0))>().pretty_name()
       << std::endl;
-
+  */
 }
 
 template <typename OutputType>

@@ -164,6 +164,61 @@ protected:
                          unsigned int n,
                          MooseArray<RealEigenVector> & dof_values) const;
   void assignNodalValue();
+  
+
+  void createArrayDofIndices(std::vector<dof_id_type> & array_dof_indices,
+                      const std::vector<dof_id_type> & dof_indices,
+                      const unsigned int count) const
+  {
+    array_dof_indices.resize(dof_indices.size() * count);
+    for (const auto i : make_range(count))
+      for (const auto j : index_range(dof_indices))
+        array_dof_indices[i * dof_indices.size() + j] = dof_indices[j] + i;
+    std::vector<dof_id_type> array_dof_duplicate = array_dof_indices;
+    std::sort(array_dof_duplicate.begin(), array_dof_duplicate.end());
+
+    auto it = std::unique(array_dof_duplicate.begin(), array_dof_duplicate.end());
+
+    array_dof_duplicate.erase(it, array_dof_duplicate.end());
+    assert(array_dof_duplicate.size() == array_dof_indices.size());
+  } 
+
+  void getArrayDoFADValues(const NumericVector<Number> & sol,
+                                                     unsigned int n,
+                                                     MooseArray<ADRealEigenVector> & dof_values) const
+  {
+    dof_values.resize(n);
+    //Moose::out<<"dof_vals size "<<dof_values.size()<<std::endl;
+    if (isNodal())
+    {
+      for (unsigned int i = 0; i < n; ++i)
+        {
+        dof_values[i].resize(_count);
+        auto dof = _dof_indices[i];
+        for (unsigned int j = 0; j < _count; ++j)
+         {dof_values[i](j) = sol(dof++);
+         }
+        }
+
+      for (unsigned int i = 0; i < n; ++i)
+        for (unsigned int j = 0; j < _count; ++j)
+          Moose::out<<"Nodal dof_values["<<i<<"]("<<j<<") = "<<dof_values[i](j)<<std::endl;
+    }
+    else
+    {
+      for (unsigned int i = 0; i < n; ++i)
+      {
+        dof_values[i].resize(_count);
+        auto dof = _dof_indices[i];
+        for (unsigned int j = 0; j < _count; ++j)
+        {
+          dof_values[i](j) = sol(dof);
+          dof += n;
+          Moose::out<<"getArray dof_values["<<i<<"]("<<j<<") = "<<dof_values[i](j)<<std::endl;
+        }
+      }
+    }
+  }
 
   /**
    * Helper method that converts a \p SolutionState argument into a corresponding tag ID,
@@ -215,6 +270,9 @@ protected:
 
   /// The dof indices for the current element
   std::vector<dof_id_type> _dof_indices;
+
+  /// The dof indices for the current element
+  std::vector<dof_id_type> _array_dof_indices;
 
   mutable std::vector<bool> _need_vector_tag_dof_u;
   mutable std::vector<bool> _need_matrix_tag_dof_u;
@@ -292,6 +350,7 @@ protected:
   std::set<TagID> _solution_tags;
 
 private:
+  unsigned int _loc_countbase=0;
   /// A const reference to the owning MooseVariableField object
   const MooseVariableField<OutputType> & _var;
 };

@@ -517,6 +517,8 @@ MooseVariableDataBase<OutputType>::nodalValueArray(Moose::SolutionState state) c
       default:
         mooseError("No current support for PreviousNL for nodal value array");
     }
+  Moose::out << "_nodal_value_array.size() : " << _nodal_value_array.size() << std::endl;
+
   }
   else
     mooseError("Nodal values can be requested only on nodal variables, variable '",
@@ -624,7 +626,9 @@ MooseVariableDataBase<OutputType>::getArrayDoFValues(const NumericVector<Number>
       dof_values[i].resize(_count);
       auto dof = _dof_indices[i];
       for (unsigned int j = 0; j < _count; ++j)
-        dof_values[i](j) = sol(dof++);
+        {dof_values[i](j) = sol(dof++);
+        //Moose::out<<"Nodal dof_values["<<i<<"]("<<j<<") = "<<dof_values[i](j)<<std::endl;
+        }
     }
   }
   else
@@ -637,6 +641,7 @@ MooseVariableDataBase<OutputType>::getArrayDoFValues(const NumericVector<Number>
       {
         dof_values[i](j) = sol(dof);
         dof += n;
+        //Moose::out<<"nonNodal dof_values["<<i<<"]("<<j<<") = "<<dof_values[i](j)<<std::endl;
       }
     }
   }
@@ -650,7 +655,8 @@ MooseVariableDataBase<RealEigenVector>::fetchDoFValues()
 
   auto n = _dof_indices.size();
   libmesh_assert(n);
-
+  //Moose::out<<_loc_countbase++ <<"-th call to fetchDoFValues (Base)"<<"Size dofs: "<<n<<std::endl;
+  
   if (is_transient)
   {
     if (_need_u_dot || _need_grad_dot || _need_dof_values_dot)
@@ -743,13 +749,14 @@ void
 MooseVariableDataBase<OutputType>::assignNodalValue()
 {
   bool is_transient = _subproblem.isTransient();
-
   libmesh_assert(_dof_indices.size());
 
   auto & dof_values = _vector_tags_dof_u[_solution_tag];
   _nodal_value = dof_values[0];
   _nodal_value_array[0] = _nodal_value;
 
+  //Moose::out<<"_nodal_value"<<_nodal_value <<std::endl;
+  //Moose::out<<"_nodal_value_aray"<<_nodal_value_array[0] <<std::endl;
   if (is_transient)
   {
     if (oldestSolutionStateRequested() >= 1)
